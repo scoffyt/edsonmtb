@@ -3592,7 +3592,7 @@ function fechaSplash(){
   const b=$('btnStart');if(b&&!b.disabled)b.focus({preventScroll:true});
 }
 $('splash').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();fechaSplash();});
-addEventListener('keydown',e=>{if(splashOn&&(e.code==='Space'||e.code==='Enter')){e.preventDefault();e.stopImmediatePropagation();fechaSplash();}},true);
+addEventListener('keydown',e=>{if(splashOn&&(e.code==='Space'||e.code==='Enter')){e.preventDefault();if(e.stopImmediatePropagation)e.stopImmediatePropagation();fechaSplash();}},true);
 /* ---------- música do menu: Sunrise Trail (arquivo menu.mp3 ao lado do jogo) ---------- */
 let musMenuTocando=false;
 const musMenu={a:null,vol:0,
