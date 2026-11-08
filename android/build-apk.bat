@@ -10,6 +10,7 @@ set ANDROID_SDK_ROOT=%SDK%
 echo sdk.dir=%SDK:\=\\%> local.properties
 echo Usando o Android SDK em %SDK%
 copy /Y ..\index.html app\src\main\assets\ >nul
+copy /Y ..\menu.mp3 app\src\main\assets\ >nul
 copy /Y ..\icone-192.png app\src\main\assets\ >nul
 copy /Y ..\icone-512.png app\src\main\assets\ >nul
 copy /Y ..\manifest.webmanifest app\src\main\assets\ >nul

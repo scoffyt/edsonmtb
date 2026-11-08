@@ -24,7 +24,7 @@ jobs:
       # o ubuntu-latest já vem com o Android SDK (ANDROID_HOME)
       - name: Coloca uma cópia do jogo dentro do APK (para jogar sem internet)
         run: |
-          cp index.html icone-192.png icone-512.png manifest.webmanifest android/app/src/main/assets/
+          cp index.html menu.mp3 icone-192.png icone-512.png manifest.webmanifest android/app/src/main/assets/
           mkdir -p android/app/src/main/assets/js && cp android/vendor/js/*.js android/app/src/main/assets/js/
 
       - name: Compila o APK

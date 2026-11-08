@@ -327,6 +327,51 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-user-se
   .home .abas button svg{width:18px;height:18px}
   .pcard{height:min(88vh,520px)}
 }
+
+/* ---------- Leal MTB: card de fim de partida e painéis ---------- */
+.painel{background:radial-gradient(110% 70% at 0% 0%,rgba(255,110,30,.16),transparent 55%),linear-gradient(180deg,rgba(20,26,24,.93),rgba(8,12,11,.95));border-color:rgba(255,255,255,.14)}
+.painel h2{color:#fff;text-shadow:0 1px 0 #c9c3b8,0 2px 0 #9f998d,0 3px 0 #746e63,0 8px 18px rgba(0,0,0,.55)}
+.painel .cta:not(.sec):not(.jogar){background:linear-gradient(180deg,#ffbe55,#ff7a18 55%,#f0570f);color:#1b0d03;box-shadow:0 5px 0 #a23a06,inset 0 2px 0 rgba(255,255,255,.5)}
+.resultado{left:50%;right:auto;top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(820px,calc(100vw - 24px));max-width:none;max-height:calc(100vh - 20px);
+  border:1px solid rgba(255,255,255,.16);border-radius:24px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px 20px;align-items:start;
+  padding:18px 20px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,138,42,.15) inset;animation:entraRes .5s cubic-bezier(.2,.9,.25,1.15)}
+@media (min-width:760px) and (min-height:600px){.resultado{transform:translate(-50%,-50%)}}
+.res-a,.res-b{display:grid;gap:10px;min-width:0}
+.res-topo small{font-size:11px;font-weight:800;letter-spacing:.26em;text-transform:uppercase;color:#ffb347}
+.res-topo h2{font-size:clamp(32px,9vh,52px)}
+.res-topo p{margin:2px 0 0;font-size:14px}
+.res-pontos{position:relative;border-radius:18px;padding:10px 14px;background:linear-gradient(135deg,rgba(255,122,24,.28),rgba(255,122,24,.06));border:1px solid rgba(255,138,42,.45);overflow:hidden}
+.res-pontos::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.18) 50%,transparent 65%);transform:translateX(-130%);animation:brilhoBtn 3.6s ease-in-out infinite}
+.res-pontos span{font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#ffd7a8}
+.res-pontos b{display:block;font-family:var(--font-display);font-weight:900;font-size:clamp(44px,13vh,72px);line-height:.9;color:#ff8a2a;font-variant-numeric:tabular-nums;
+  text-shadow:0 1px 0 #d9600f,0 2px 0 #b24c0b,0 3px 0 #8f3b08,0 0 26px rgba(255,120,30,.45)}
+.res-pontos p{margin:4px 0 0;font-size:13.5px;font-weight:600;color:#fff}
+.res-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.res-stats div{border-radius:12px;padding:6px 6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);text-align:center;min-width:0}
+.res-stats span{display:block;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--nevoa-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-stats b{display:block;font-family:var(--font-display);font-weight:900;font-size:21px;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-b .cta.jogar{min-height:56px;font-size:30px}
+.res-acoes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.res-acoes .cta{min-height:44px;font-size:18px;padding:6px 10px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,0)),rgba(10,16,14,.6);border:1.5px solid rgba(255,138,42,.85);color:#ffb347}
+.res-b .secao{padding-top:10px;gap:6px}
+.res-b .secao h3{font-size:18px}
+.res-miss .missoes{gap:7px}
+.res-miss .missoes li{font-size:12.5px}
+@keyframes entraRes{from{opacity:0;transform:translate(-50%,-46%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@media (prefers-reduced-motion:reduce){.resultado,.res-pontos::after{animation:none}}
+@media (orientation:landscape) and (max-height:560px){
+  .resultado{padding:12px 14px;gap:10px 16px;max-height:calc(100vh - 14px)}
+  .res-a,.res-b{gap:7px}
+  .res-topo h2{font-size:min(10vh,40px)}
+  .res-topo small{display:none}
+  .res-topo p{font-size:12.5px}
+  .res-pontos{padding:7px 12px}
+  .res-pontos b{font-size:min(14vh,56px)}
+  .res-stats b{font-size:17px}
+  .res-b .cta.jogar{min-height:46px;font-size:26px}
+  .res-acoes .cta{min-height:38px;font-size:16px}
+}
+@media (orientation:portrait),(max-width:620px){.resultado{grid-template-columns:1fr}.res-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -428,7 +473,7 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-user-se
   <div class="aba-topo"><h2 id="t-ajustes">Ajustes</h2><button class="fechar" type="button" aria-label="Fechar ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="ajustes"><button class="opcao" data-op="som"></button><button class="opcao" data-op="musica"></button><button class="opcao" data-op="qualidade"></button><button class="opcao" data-op="narr"></button><button class="opcao" data-op="camera"></button></div>
   <div class="secao"><h3>Narração</h3><p class="nota">Para usar a sua voz nas frases, toque em Gravar: o celular abre o gravador. Frases curtas, de até 3 segundos.</p><ul class="vozes" id="vozes"></ul></div>
-  <p class="nota">Versão 33</p>
+  <p class="nota">Versão 35</p>
 </section>
 
 
@@ -440,27 +485,28 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-user-se
   <div class="ajustes"><button class="opcao" data-op="som"></button><button class="opcao" data-op="musica"></button><button class="opcao" data-op="qualidade"></button><button class="opcao" data-op="narr"></button><button class="opcao" data-op="camera"></button></div>
 </section>
 
-<section class="painel" id="fim" hidden>
-  <h2>Foi pro chão!</h2>
-  <p id="fMotivo"></p>
-  <div class="resumo">
-    <div class="destaque"><span>Pontos</span><b id="fPontos">0</b></div>
-    <div><span>Recorde</span><b id="fRec">0</b></div>
-    <div><span>Distância</span><b id="fDist">0 m</b></div>
-    <div><span>Manobras</span><b id="fMan">0</b></div>
-    <div><span>Medalhas</span><b id="fMed">0</b></div>
-    <div><span>Horário na trilha</span><b id="fHora">17:00</b></div>
+<section class="painel resultado" id="fim" hidden aria-labelledby="fTitulo">
+  <div class="res-a">
+    <div class="res-topo"><small>Fim da descida</small><h2 id="fTitulo">Foi pro chão!</h2><p id="fMotivo"></p></div>
+    <div class="res-pontos"><span>Pontos</span><b id="fPontos">0</b><p id="fMsg"></p></div>
+    <div class="res-stats">
+      <div><span>Recorde</span><b id="fRec">0</b></div>
+      <div><span>Distância</span><b id="fDist">0 m</b></div>
+      <div><span>Manobras</span><b id="fMan">0</b></div>
+      <div><span>Medalhas</span><b id="fMed">0</b></div>
+      <div><span>Horário</span><b id="fHora">17:00</b></div>
+    </div>
   </div>
-  <p id="fMsg"></p>
-  <button class="cta" id="btnDeNovo">Pedalar de novo</button>
-  <button class="cta sec" id="btnStory">Criar imagem para os stories</button>
-  <button class="cta sec" id="btnMenuFim">Menu</button>
-  <div class="secao" id="fRank" hidden>
+  <div class="res-b">
+    <button class="cta jogar" id="btnDeNovo">Pedalar de novo</button>
+    <div class="res-acoes"><button class="cta sec" id="btnStory">Stories</button><button class="cta sec" id="btnMenuFim">Menu</button></div>
+    <div class="secao res-rank" id="fRank" hidden>
     <h3>Entrar no ranking</h3>
     <form class="form-rank" id="formRank"><input id="nomeRank" maxlength="18" placeholder="Seu nome ou @" autocomplete="nickname" aria-label="Seu nome no ranking"><button class="opcao" type="submit">Salvar</button></form>
     <p class="nota" id="fRankNota"></p>
   </div>
-  <div class="secao"><h3>Missões</h3><ul class="missoes" id="fMissoes"></ul></div>
+    <div class="secao res-miss"><h3>Missões</h3><ul class="missoes" id="fMissoes"></ul></div>
+  </div>
 </section>
 
 <section class="painel" id="story" hidden>
@@ -591,7 +637,7 @@ const SOM=(()=>{
     setMusica(on){if(ok)music.gain.setTargetAtTime(on?0.3:0,ac.currentTime,0.1);},
     loops(o){if(!ok)return;setLoop('wind',o.wind,0.2);setLoop('tire',o.tire,0.05);setLoop('rain',o.rain,1.2);setLoop('water',o.water,0.4);setLoop('cart',o.cart,0.4);},
     music(){
-      if(!ok||!cfg.musica)return;
+      if(!ok||!cfg.musica||musMenuTocando)return;
       const spb=60/96/2;
       if(nextT<ac.currentTime)nextT=ac.currentTime+0.05;
       while(nextT<ac.currentTime+0.3){
@@ -1925,7 +1971,9 @@ function travaPaisagem(){
     const lock=()=>{try{const o=screen.orientation;if(o&&o.lock)o.lock('landscape').catch(()=>{});}catch(e){}};
     if(p&&p.then)p.then(lock).catch(lock);else lock();}catch(e){}
 }
-const gesto=()=>{SOM.init();SOM.resume();travaPaisagem();};
+let gestoFeito=false;
+const gesto=()=>{SOM.init();SOM.resume();travaPaisagem();gestoFeito=true;
+  if(st==='menu'&&cfg.som&&cfg.musica&&typeof musMenu!=='undefined'){const a=musMenu.el();if(a&&a.paused)a.play().catch(()=>{});}};
 // celular virou em pé no meio da partida: pausa
 matchMedia('(orientation:portrait) and (pointer:coarse)').addEventListener('change',e=>{if(e.matches&&st==='play')pause();});
 addEventListener('pointerdown',gesto,true);
@@ -3501,11 +3549,25 @@ $('btnSalvarStory').addEventListener('click',async()=>{
 /* ---------- laço ---------- */
 showRec();reset(false);loadModels();applyQuality();
 renderAjustes();renderCores();renderBikes();renderMapas();carregaPilotos();renderPilotos();renderAtual();renderCam();renderMissoes($('listaMissoes'),false);renderRank();renderDia();renderVozes();carregaVozes();sbCarrega();initCaps();
+/* ---------- música do menu: Sunrise Trail (arquivo menu.mp3 ao lado do jogo) ---------- */
+let musMenuTocando=false;
+const musMenu={a:null,vol:0,
+  el(){if(!this.a){try{this.a=new Audio('menu.mp3');this.a.loop=true;this.a.preload='auto';this.a.volume=0;}catch(e){this.a=null;}}return this.a;},
+  tick(dt){
+    const quer=st==='menu'&&cfg.som&&cfg.musica&&gestoFeito&&!document.hidden;
+    if(!quer&&!this.a)return;const a=this.el();if(!a)return;
+    this.vol+=((quer?0.6:0)-this.vol)*Math.min(1,dt*(quer?1.2:2.2));
+    if(quer&&a.paused)a.play().catch(()=>{});
+    a.volume=Math.max(0,Math.min(1,this.vol));
+    if(!quer&&this.vol<0.01&&!a.paused)a.pause();
+    musMenuTocando=!a.paused&&this.vol>0.03;
+  }};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&musMenu.a)musMenu.a.pause();});
 let last=performance.now();
 function loop(now){
   const dt=Math.min(0.033,(now-last)/1000);last=now;
   let k=1;if(tutWait)k=0.05;else if(slowT>0){slowT-=dt;k=slowS;}
-  update(dt*k);render(dt);updateHud(dt);audioFrame(dt);
+  update(dt*k);render(dt);updateHud(dt);audioFrame(dt);musMenu.tick(dt);
   if(st==='play'&&cfg.qualidade==='auto'&&!autoBaixa&&t>2){
     fpsT+=dt;fpsN++;
     if(fpsT>=5){if(fpsN/fpsT<38){autoBaixa=true;applyQuality();showDica('Qualidade ajustada para rodar mais leve',2.4);}fpsT=0;fpsN=0;}
