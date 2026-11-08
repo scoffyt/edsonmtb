@@ -1,0 +1,54 @@
+name: APK Android
+
+# A cada atualização do jogo no main, o GitHub compila o APK e publica na release "apk".
+on:
+  push:
+    branches: [main]
+    paths: ['index.html', 'android/**', '.github/workflows/apk.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Coloca uma cópia do jogo dentro do APK (para jogar sem internet)
+        run: cp index.html icone-192.png icone-512.png manifest.webmanifest android/app/src/main/assets/
+
+      - name: Compila o APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+
+      - name: Renomeia
+        run: cp android/app/build/outputs/apk/release/app-release.apk TrilhaDoEdson.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TrilhaDoEdson-apk
+          path: TrilhaDoEdson.apk
+
+      - name: Publica na release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk
+          name: Trilha do Edson para Android
+          make_latest: true
+          overwrite_files: true
+          files: TrilhaDoEdson.apk
+          body: |
+            Baixe o **TrilhaDoEdson.apk** abaixo e instale no celular (permita "instalar apps de fontes desconhecidas").
+            O app abre o jogo direto do site, então as atualizações chegam sozinhas, sem reinstalar.
+            Sem internet, ele abre a cópia que vem dentro do APK.
