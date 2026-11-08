@@ -21,8 +21,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
-
+      # o ubuntu-latest já vem com o Android SDK (ANDROID_HOME)
       - name: Coloca uma cópia do jogo dentro do APK (para jogar sem internet)
         run: cp index.html icone-192.png icone-512.png manifest.webmanifest android/app/src/main/assets/
 
