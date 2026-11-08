@@ -52,6 +52,12 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-user-se
   display:grid;place-items:center;cursor:pointer;touch-action:manipulation;flex:none}
 .btn-pausa:focus-visible,.cta:focus-visible{outline:2px solid var(--farol);outline-offset:3px}
 
+#btnFreio{position:fixed;z-index:2;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;
+  min-height:52px;padding:0 18px 0 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.35);background:rgba(12,24,20,.5);color:#fff;font:700 15px var(--font-body);
+  touch-action:none;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#btnFreio svg{width:24px;height:24px}
+#btnFreio[aria-pressed="true"]{background:var(--farol);color:#1d1406;border-color:var(--farol)}
+#btnFreio:focus-visible{outline:2px solid var(--farol);outline-offset:3px}
 #volante{position:fixed;z-index:2;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:14px}
 #volante button{width:78px;height:78px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);background:rgba(12,24,20,.42);color:#fff;display:grid;place-items:center;
   touch-action:none;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:background .12s,transform .12s}
@@ -291,6 +297,7 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-user-se
     <span class="chip" id="hModo" hidden></span>
   </div>
 </div>
+<button type="button" id="btnFreio" hidden aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9v6M14.5 9v6"/></svg><span>Frear</span></button>
 <div id="volante" hidden><button type="button" id="vEsq" aria-label="Virar para a esquerda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><button type="button" id="vDir" aria-label="Virar para a direita"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
 <div id="dica" class="some" aria-hidden="true">Toque na tela para pular</div>
 <div id="contagem" hidden aria-live="polite"></div>
@@ -341,7 +348,7 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-user-se
   <div class="aba-topo"><h2 id="t-ajustes">Ajustes</h2><button class="fechar" type="button" aria-label="Fechar ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="ajustes"><button class="opcao" data-op="som"></button><button class="opcao" data-op="musica"></button><button class="opcao" data-op="qualidade"></button><button class="opcao" data-op="narr"></button><button class="opcao" data-op="camera"></button></div>
   <div class="secao"><h3>Narração</h3><p class="nota">Para usar a sua voz nas frases, toque em Gravar: o celular abre o gravador. Frases curtas, de até 3 segundos.</p><ul class="vozes" id="vozes"></ul></div>
-  <p class="nota">Versão 30</p>
+  <p class="nota">Versão 32</p>
 </section>
 
 
@@ -465,7 +472,18 @@ const SOM=(()=>{
     const len=ac.sampleRate*2;noiseBuf=ac.createBuffer(1,len,ac.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
     nodes.wind=loopNoise('bandpass',650,0.5,amb);
     nodes.tire=loopNoise('bandpass',2300,1.1,sfx);
-    nodes.rain=loopNoise('highpass',2800,0.3,amb);
+    // chuva: chiado macio (ruído rosa) + gotas soltas, num laço de 6 s que emenda sem corte
+    {const sr=ac.sampleRate,rl=sr*6,rb=ac.createBuffer(1,rl,sr),rd=rb.getChannelData(0);let b0=0,b1=0,b2=0;
+     for(let i=0;i<rl;i++){const w=Math.random()*2-1;b0=0.99765*b0+w*0.099046;b1=0.963*b1+w*0.2965164;b2=0.57*b2+w*1.0526913;rd[i]=(b0+b1+b2+w*0.1848)*0.032;}
+     const nd=Math.floor(6*150);
+     for(let k=0;k<nd;k++){const pos=(Math.random()*(rl-sr*0.05))|0,a=Math.pow(Math.random(),2.2)*0.32,f=1800+Math.random()*4200,dec=(0.003+Math.random()*0.009)*sr,n=Math.min(rl-pos,dec*6);
+       for(let j=0;j<n;j++)rd[pos+j]+=a*Math.sin(6.2832*f*j/sr)*Math.exp(-j/dec);}
+     const cf=(sr*0.4)|0;for(let j=0;j<cf;j++){const t=j/cf;rd[j]=rd[j]*t+rd[rl-cf+j]*(1-t);}
+     let pk=0;for(let i=0;i<rl-cf;i++)pk=Math.max(pk,Math.abs(rd[i]));const nb=ac.createBuffer(1,rl-cf,sr),nd2=nb.getChannelData(0);for(let i=0;i<rl-cf;i++)nd2[i]=rd[i]/pk*0.8;
+     const src=ac.createBufferSource();src.buffer=nb;src.loop=true;
+     const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=5200;lp.Q.value=0.4;
+     const hp=ac.createBiquadFilter();hp.type='highpass';hp.frequency.value=180;
+     const g=ac.createGain();g.gain.value=0;src.connect(hp);hp.connect(lp);lp.connect(g);g.connect(amb);src.start(0,Math.random()*4);nodes.rain={g,fl:lp};}
     nodes.water=loopNoise('lowpass',850,0.4,amb);
     // o "canto" do eixo do carro de boi
     const o=ac.createOscillator();o.type='triangle';o.frequency.value=720;
@@ -491,7 +509,7 @@ const SOM=(()=>{
     resume(){if(ac&&ac.state==='suspended')ac.resume();},
     setSom(on){if(ok)master.gain.setTargetAtTime(on?0.9:0,ac.currentTime,0.05);},
     setMusica(on){if(ok)music.gain.setTargetAtTime(on?0.3:0,ac.currentTime,0.1);},
-    loops(o){if(!ok)return;setLoop('wind',o.wind,0.2);setLoop('tire',o.tire,0.05);setLoop('rain',o.rain,0.5);setLoop('water',o.water,0.4);setLoop('cart',o.cart,0.4);},
+    loops(o){if(!ok)return;setLoop('wind',o.wind,0.2);setLoop('tire',o.tire,0.05);setLoop('rain',o.rain,1.2);setLoop('water',o.water,0.4);setLoop('cart',o.cart,0.4);},
     music(){
       if(!ok||!cfg.musica)return;
       const spb=60/96/2;
@@ -1843,6 +1861,14 @@ addEventListener('keydown',e=>{
   else if(k==='Enter'&&(st==='menu'||st==='over')&&ready&&$('story').hidden){e.preventDefault();start();}
 });
 addEventListener('keyup',e=>{if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW')held=false;});
+let freio=false,freioK=0;
+function setFreio(v){
+  freio=v&&st==='play';const b=$('btnFreio');b.setAttribute('aria-pressed',freio?'true':'false');b.querySelector('span').textContent=freio?'Pedalar':'Frear';
+  if(freio)showDica(fpModo()?'Bike parada. Arraste no alto da tela para olhar em volta':'Bike parada. Toque em Pedalar para seguir',2.6);
+}
+$('btnFreio').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();gesto();setFreio(!freio);});
+$('btnFreio').addEventListener('click',e=>{if(e.detail===0)setFreio(!freio);});
+addEventListener('keydown',e=>{if((e.code==='KeyS'||e.code==='ArrowDown')&&!e.repeat&&st==='play'){e.preventDefault();setFreio(!freio);}});
 const steerK={l:false,r:false,bl:false,br:false};
 const steerVal=()=>((steerK.r||steerK.br)?1:0)-((steerK.l||steerK.bl)?1:0);
 for(const [id,k] of [['vEsq','bl'],['vDir','br']]){
@@ -1874,7 +1900,7 @@ $('btnPausa').addEventListener('click',()=>{if(st==='play'||st==='intro')pause()
 function showRec(){$('recMenu').textContent=best>0?`Seu recorde: ${fmtN(best)} pontos`:'Ainda sem recorde. Bora fazer o primeiro.';}
 function showDica(txt,sec){dica.textContent=txt;dica.classList.remove('some');hintT=sec;}
 function start(m){
-  gesto();decodeVozes();const deNovo=st==='over'||st==='crash';vozFila=[];if(SOM.paraVoz)SOM.paraVoz();fechaAba(true);falaMapa(deNovo?'levantar':'inicio');$('mapaBan').hidden=true;
+  gesto();decodeVozes();freio=false;freioK=0;const deNovo=st==='over'||st==='crash';vozFila=[];if(SOM.paraVoz)SOM.paraVoz();fechaAba(true);falaMapa(deNovo?'levantar':'inicio');$('mapaBan').hidden=true;
   modo=m||'livre';
   modoDia=modo==='diario';
   R_G=modoDia?mulberry(hashStr('trilha-edson-'+diaHoje())):Math.random;
@@ -2194,7 +2220,7 @@ function atualizaAnimais(dt){
   // galinhas atravessando
   for(const o of obs){
     if(o.type!=='galinha')continue;
-    if(o.fuga)o.fz+=o.fdir*dt*7;else if(o.cx-rx<70)o.cx+=o.vx*dt;
+    if(o.fuga)o.fz+=o.fdir*dt*7;else if(o.cx-rx<70&&!(freioK>0.5&&o.cx-rx<6&&o.cx-rx>-3))o.cx+=o.vx*dt;
     o.x0=o.cx-1.5;o.x1=o.cx+1.5;
     const z=o.zc+o.fz;o.zAt=z;
     for(const c of o.list){
@@ -2410,7 +2436,7 @@ function fpCores(){
   const miguel=p.id!=='edson',cor=ci===0?(miguel?'#202020':'#d8312b'):CORES[ci].css;
   FP_BRACO.color.set(cor);FP_PELE.color.set(miguel?(ci===0?'#1c1c1c':cor):'#b98260');FP_JOELHO.color.set(miguel?'#1c1c1c':'#b98260');FP_QUADRO.color.set(miguel?'#8a1d1d':'#141416');
 }
-let farolK=0,fpBlend=0,volVis=false,dicaFP=ls.get('trilha-edson-dica-fp',false);
+let freioVis=false,farolK=0,fpBlend=0,volVis=false,dicaFP=ls.get('trilha-edson-dica-fp',false);
 const fpModo=()=>cfg.cam==='fp'&&st!=='menu';
 function cameraFP(dt,dark){
   fpCores();
@@ -2835,7 +2861,8 @@ function update(dt){
     }
   }else if(st==='play'){
     t+=dt;boost=Math.max(0,boost-dt*1.2);slow=Math.max(0,slow-dt);
-    speed=(Math.min(VMAX,V0+t*ACC)+boost)*(slow>0?0.62:1);
+    freioK+=((freio?1:0)-freioK)*Math.min(1,dt*(freio?1.5:1.1));if(freio&&freioK>0.985)freioK=1;
+    speed=(Math.min(VMAX,V0+t*ACC)+boost)*(slow>0?0.62:1)*(1-freioK);
     rx+=speed*dt;dist+=speed*dt;
     hour=startHour+dist/M_POR_HORA;
     climaT-=dt;if(climaT<=0)proximoClima();
@@ -2868,7 +2895,7 @@ function update(dt){
         R.y=Math.max(g,wheelReq(g,0.6));
         R.phase+=dt*speed*0.55;
         const pf=Math.floor(R.phase);if(pf!==lastPf){lastPf=pf;if(pf%4===0)SOM.tick();}
-        if(Math.random()<dt*40)emit(slow>0?mudP:dust,rx-0.9,R.y+0.1,0.7+rnd(-.3,.3),rnd(-3,0),rnd(.5,2),rnd(-.6,.6),rnd(.3,.6));
+        if(Math.random()<dt*40*(1-freioK))emit(slow>0?mudP:dust,rx-0.9,R.y+0.1,0.7+rnd(-.3,.3),rnd(-3,0),rnd(.5,2),rnd(-.6,.6),rnd(.3,.6));
         if(jumpBuf>0&&!R.onRamp){if(sobDeck())jumpBuf=0;else doJump();}
       }
     }else{
@@ -2972,7 +2999,7 @@ function update(dt){
   // bois e carros de boi andando pela trilha, vindo de frente ou no mesmo sentido
   for(const o of obs){
     if(o.type!=='boi'&&o.type!=='carro')continue;
-    const moving=o.cx-rx<90&&st!=='menu';
+    const moving=o.cx-rx<90&&st!=='menu'&&!(freioK>0.5&&o.cx-rx<8&&o.cx-rx>-3);
     if(moving)o.cx+=o.vx*dt;
     o.x0=o.cx-o.hl;o.x1=o.cx+o.hl;
     o.mesh.position.set(o.cx,terrain(o.cx,o.zc)-0.04,o.zc);o.mesh.rotation.y=o.vx>0?Math.PI/2:-Math.PI/2;
@@ -3111,6 +3138,7 @@ function render(dt){
   const fp=fpModo();
   rider.visible=!fp;blob.visible=!fp;beam.visible=!fp;fpRig.visible=fp;
   for(const m of ladoDir)m.visible=fp;atualizaFazendas(dt,fp);
+  {const fv=st==='play';if(fv!==freioVis){freioVis=fv;$('btnFreio').hidden=!fv;if(!fv&&freio)setFreio(false);}}
   {const v=fp&&(st==='play'||st==='intro');if(v!==volVis){volVis=v;$('volante').hidden=!v;if(!v){steerK.bl=steerK.br=false;}}
    if(v&&st==='play'&&!dicaFP&&t>1.5){dicaFP=true;ls.set('trilha-edson-dica-fp',true);showDica('Use ◀ ▶ para desviar. Arraste no alto da tela para olhar em volta',4);}}
   if(fp)cameraFP(dt,dark);
@@ -3170,8 +3198,8 @@ function audioFrame(dt){
   const p=st==='pause';
   SOM.loops({
     wind:p?0:0.03+(playing?sp*0.22+(R.ground?0:0.12):0),
-    tire:st==='play'&&R.ground?(0.06+sp*0.16)*(slow>0?1.6:1):0,
-    rain:p?0:wx.r*0.32,water:p?0:water*0.3,cart:p?0:cart*0.05
+    tire:st==='play'&&R.ground?(0.06+sp*0.16)*(slow>0?1.6:1)*(1-freioK):0,
+    rain:p?0:wx.r*0.17,water:p?0:water*0.3,cart:p?0:cart*0.05
   });
   SOM.music();
   if(!p){
