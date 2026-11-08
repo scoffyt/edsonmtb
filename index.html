@@ -341,7 +341,7 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-user-se
   <div class="aba-topo"><h2 id="t-ajustes">Ajustes</h2><button class="fechar" type="button" aria-label="Fechar ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="ajustes"><button class="opcao" data-op="som"></button><button class="opcao" data-op="musica"></button><button class="opcao" data-op="qualidade"></button><button class="opcao" data-op="narr"></button><button class="opcao" data-op="camera"></button></div>
   <div class="secao"><h3>Narração</h3><p class="nota">Para usar a sua voz nas frases, toque em Gravar: o celular abre o gravador. Frases curtas, de até 3 segundos.</p><ul class="vozes" id="vozes"></ul></div>
-  <p class="nota">Versão 28</p>
+  <p class="nota">Versão 29</p>
 </section>
 
 
@@ -2363,29 +2363,50 @@ function fpSeg(mat,a,b,r){
   fpRig.add(m);return m;
 }
 const V3=(x,y,z)=>new T.Vector3(x,y,z);
-// guidão com leve subida, mesa, garfo e roda da frente
-fpSeg(FP_MET,V3(-0.38,-0.32,-0.66),V3(-0.1,-0.35,-0.64),0.016);fpSeg(FP_MET,V3(0.38,-0.32,-0.66),V3(0.1,-0.35,-0.64),0.016);
-fpSeg(FP_MET,V3(-0.1,-0.35,-0.64),V3(0.1,-0.35,-0.64),0.02);
-fpSeg(FP_PRETO,V3(-0.42,-0.318,-0.665),V3(-0.31,-0.323,-0.66),0.024);fpSeg(FP_PRETO,V3(0.42,-0.318,-0.665),V3(0.31,-0.323,-0.66),0.024);
-fpSeg(FP_MET,V3(0,-0.35,-0.64),V3(0,-0.37,-0.55),0.026);
-fpSeg(FP_MET,V3(0,-0.37,-0.55),V3(0,-0.62,-0.5),0.032);
-const fpQuadro=fpSeg(FP_QUADRO,V3(0,-0.6,-0.5),V3(0,-0.78,0.1),0.04);
-for(const sx of [-0.07,0.07])fpSeg(FP_MET,V3(sx,-0.62,-0.52),V3(sx,-1.1,-0.78),0.022);
-for(const sx of [-0.27,0.27])fpSeg(FP_MET,V3(sx*0.9,-0.33,-0.66),V3(sx*1.12,-0.3,-0.58),0.008);
-const fpRoda=new T.Mesh(new T.TorusGeometry(0.42,0.055,8,28),FP_PNEU);fpRoda.rotation.y=Math.PI/2;fpRoda.position.set(0,-1.08,-0.98);fpRig.add(fpRoda);
-// braços: manga no ombro, antebraço e luva no punho
+// guidão e braços no estilo da câmera de peito (GoPro): guidão largo e reto, antebraços entrando pelos cantos de cima
+for(const m of [FP_PELE,FP_LUVA,FP_BRACO])m.flatShading=false;
+const FP_JOELHO=new T.MeshLambertMaterial({color:0xc68a62}),FP_FAIXA=M(0xe8e8e8),fpTubo=(pts,r,mat)=>{const c=new T.CatmullRomCurve3(pts.map(p=>V3(...p)));const m=new T.Mesh(new T.TubeGeometry(c,24,r,6,false),mat);fpRig.add(m);return m;};
+FP_MET.color.set(0x161718);
+const HY=-0.062,HZ=-0.43;
+fpSeg(FP_MET,V3(-0.34,HY+0.004,HZ),V3(-0.06,HY-0.004,HZ+0.006),0.0105);fpSeg(FP_MET,V3(0.34,HY+0.004,HZ),V3(0.06,HY-0.004,HZ+0.006),0.0105);
+fpSeg(FP_MET,V3(-0.07,HY-0.004,HZ+0.006),V3(0.07,HY-0.004,HZ+0.006),0.016);
+for(const sx of [-1,1]){
+  fpSeg(FP_PRETO,V3(sx*0.35,HY+0.005,HZ),V3(sx*0.255,HY+0.001,HZ+0.002),0.018);
+  // manete de freio e trocador
+  fpSeg(FP_MET,V3(sx*0.215,HY-0.004,HZ-0.004),V3(sx*0.29,HY-0.03,HZ-0.05),0.006);
+  fpSeg(FP_PRETO,V3(sx*0.2,HY-0.004,HZ),V3(sx*0.2,HY-0.03,HZ+0.01),0.011);
+  fpSeg(FP_PRETO,V3(sx*0.17,HY-0.01,HZ+0.01),V3(sx*0.16,HY-0.035,HZ+0.03),0.008);
+}
+// mesa, caixa de direção, coroa e bengalas da suspensão
+fpSeg(FP_MET,V3(0,HY-0.004,HZ+0.006),V3(0,HY-0.012,HZ+0.075),0.02);
+fpSeg(FP_MET,V3(0,HY-0.012,HZ+0.07),V3(0,HY-0.11,HZ+0.05),0.022);
+fpSeg(FP_MET,V3(-0.065,HY-0.12,HZ+0.045),V3(0.065,HY-0.12,HZ+0.045),0.02);
+for(const sx of [-0.06,0.06]){fpSeg(FP_MET,V3(sx,HY-0.12,HZ+0.045),V3(sx*1.05,HY-0.2,HZ+0.02),0.019);fpSeg(FP_MET,V3(sx*1.05,HY-0.2,HZ+0.02),V3(sx*1.1,HY-0.42,HZ-0.06),0.016);}
+const fpQuadro=fpSeg(FP_QUADRO,V3(0,HY-0.08,HZ+0.07),V3(0,HY-0.28,HZ+0.45),0.03);
+const fpRoda=new T.Mesh(new T.TorusGeometry(0.36,0.05,8,28),FP_PNEU);fpRoda.rotation.y=Math.PI/2;fpRoda.position.set(0,HY-0.56,HZ-0.12);fpRig.add(fpRoda);
+// conduítes fazendo a curva na frente do guidão
+for(const sx of [-1,1]){
+  fpTubo([[sx*0.2,HY-0.03,HZ+0.01],[sx*0.18,HY-0.12,HZ-0.05],[sx*0.1,HY-0.17,HZ-0.04],[sx*0.04,HY-0.12,HZ+0.03],[sx*0.03,HY-0.2,HZ+0.1]],0.0035,FP_PRETO);
+  fpTubo([[sx*0.16,HY-0.035,HZ+0.03],[sx*0.13,HY-0.14,HZ-0.02],[sx*0.07,HY-0.15,HZ+0.0],[sx*0.035,HY-0.1,HZ+0.06]],0.003,FP_PRETO);
+}
+// braços: entram pelos cantos de cima da tela até as luvas
 const fpBracos=[];
 for(const sx of [-1,1]){
-  const ombro=V3(sx*0.27,-0.5,0.08),cot=V3(sx*0.33,-0.47,-0.3),punho=V3(sx*0.36,-0.34,-0.6);
-  const manga=fpSeg(FP_BRACO,ombro,cot,0.055),ante=fpSeg(FP_PELE,cot,punho,0.042);
-  const luva=new T.Mesh(blobGeo,FP_LUVA);luva.scale.set(0.05,0.045,0.065);luva.position.set(sx*0.37,-0.315,-0.645);fpRig.add(luva);
-  fpBracos.push({manga,ante,luva});
+  const ombro=V3(sx*0.78,0.42,0.02),cot=V3(sx*0.6,0.22,-0.2),punho=V3(sx*0.33,HY+0.02,HZ+0.025);
+  const manga=fpSeg(FP_BRACO,ombro,cot,0.062),ante=fpSeg(FP_PELE,cot,punho,0.037);const ante2=fpSeg(FP_PELE,V3(sx*0.47,0.08,-0.31),punho,0.039);
+  const faixa=fpSeg(FP_FAIXA,V3(sx*0.345,HY+0.03,HZ+0.04),V3(sx*0.33,HY+0.022,HZ+0.016),0.043);
+  const luva=new T.Mesh(blobGeo,FP_LUVA);luva.scale.set(0.06,0.044,0.052);luva.position.set(sx*0.305,HY+0.012,HZ-0.002);luva.rotation.z=sx*-0.25;fpRig.add(luva);
+  const dedos=new T.Mesh(blobGeo,FP_LUVA);dedos.scale.set(0.05,0.03,0.04);dedos.position.set(sx*0.285,HY-0.008,HZ-0.03);fpRig.add(dedos);
+  fpBracos.push({manga,ante,luva,faixa});
 }
+// joelhos que sobem na pedalada, como no vídeo
+const fpJoelhos=[];
+for(const sx of [-1,1]){const j=new T.Mesh(blobGeo,FP_JOELHO);j.scale.set(0.085,0.075,0.095);j.position.set(sx*0.13,-0.6,-0.32);fpRig.add(j);fpJoelhos.push(j);}
 fpRig.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;o.renderOrder=10;}});
 function fpCores(){
   const p=pilotoAtual(),ci=cfg.cor&&CORES[cfg.cor]&&prog.done.length>=CORES[cfg.cor].req?cfg.cor:0;
   const miguel=p.id!=='edson',cor=ci===0?(miguel?'#202020':'#d8312b'):CORES[ci].css;
-  FP_BRACO.color.set(cor);FP_PELE.color.set(miguel?cor:'#c68a62');FP_QUADRO.color.set(miguel?'#8a1d1d':'#1e1e22');
+  FP_BRACO.color.set(cor);FP_PELE.color.set(miguel?(ci===0?'#1c1c1c':cor):'#b98260');FP_JOELHO.color.set(miguel?'#1c1c1c':'#b98260');FP_QUADRO.color.set(miguel?'#8a1d1d':'#141416');
 }
 let fpBlend=0,volVis=false,dicaFP=ls.get('trilha-edson-dica-fp',false);
 const fpModo=()=>cfg.cam==='fp'&&st!=='menu';
@@ -2393,9 +2414,10 @@ function cameraFP(dt,dark){
   fpCores();
   const bob=R.ground&&st==='play'?Math.abs(Math.sin(R.phase*Math.PI))*0.035:0,dip=R.land>0?-0.1*R.land/0.12:0;
   const sx=(Math.random()-.5)*shake*0.25,sy=(Math.random()-.5)*shake*0.25;
-  const hx=rx+0.2,hy=R.y+2.05+bob+dip+sy,hz=R.z+sx;
+  const hx=rx+0.2,hy=R.y+1.85+bob+dip+sy,hz=R.z+sx;
+  {const ph=R.phase*Math.PI,ped=R.ground&&st==='play'?1:0.3;fpJoelhos.forEach((j,k)=>{const u=Math.sin(ph+(k?Math.PI:0));j.position.y=-0.47+Math.max(0,u)*0.13*ped;j.position.z=-0.3-Math.max(0,u)*0.04;});}
   if(olhar.id==null){const k=Math.exp(-dt*2.4);olhar.yaw*=k;olhar.pitch*=k;}
-  let px=hx,py=hy,pz=hz,ry=-Math.PI/2+R.spinY-R.vz*0.045-olhar.yaw,rxx=R.ang*0.85-0.07+R.spinZ+R.rot+olhar.pitch,rz=(st==='play'&&R.ground?Math.sin(R.phase*Math.PI*0.5)*0.012:0)-R.vz*0.035;
+  let px=hx,py=hy,pz=hz,ry=-Math.PI/2+R.spinY-R.vz*0.045-olhar.yaw,rxx=R.ang*0.85-0.17+R.spinZ+R.rot+olhar.pitch,rz=(st==='play'&&R.ground?Math.sin(R.phase*Math.PI*0.5)*0.012:0)-R.vz*0.035;
   if(st==='intro'){
     // sai da vista aérea da largada e entra na cabeça do ciclista
     const e=ease(Math.min(1,Math.max(0,(introT-0.1)/2.4)));
@@ -2404,7 +2426,7 @@ function cameraFP(dt,dark){
     fpRig.visible=e>0.85;
   }
   camera.position.set(px,py,pz);camera.rotation.order='YXZ';camera.rotation.set(rxx,ry,rz);
-  const fov=72+(st==='play'?(speed-V0)*0.6:0)+kick*1.4;
+  const fov=Math.min(92,(W/H>1.3?66:78)+(st==='play'?(speed-V0)*0.5:0)+kick*1.4);
   if(Math.abs(camera.fov-fov)>0.01){camera.fov=fov;camera.updateProjectionMatrix();}
   // braços acompanham o pedal e puxam o guidão no pulo
   const pux=R.ground?0:Math.min(1,R.air*3)*0.04;
