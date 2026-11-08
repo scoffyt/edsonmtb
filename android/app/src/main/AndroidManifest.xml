@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <application
-        android:label="Trilha do Edson"
+        android:label="Leal MTB"
         android:icon="@mipmap/ic_launcher"
         android:hardwareAccelerated="true"
         android:theme="@style/Tela"

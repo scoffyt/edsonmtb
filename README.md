@@ -1,4 +1,4 @@
-# Trilha do Edson
+# Leal MTB
 
 Jogo 3D de mountain bike para celular, feito para o Edson ([@edsonalexandre_mtb](https://www.instagram.com/edsonalexandre_mtb/)).
 

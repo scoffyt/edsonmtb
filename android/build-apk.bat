@@ -22,7 +22,7 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-copy /Y app\build\outputs\apk\release\app-release.apk ..\TrilhaDoEdson.apk >nul
+copy /Y app\build\outputs\apk\release\app-release.apk ..\LealMTB.apk >nul
 echo.
-echo Pronto: TrilhaDoEdson.apk esta na pasta do repositorio.
+echo Pronto: LealMTB.apk esta na pasta do repositorio.
 pause
