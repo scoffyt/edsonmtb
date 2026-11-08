@@ -13,6 +13,8 @@ copy /Y ..\index.html app\src\main\assets\ >nul
 copy /Y ..\icone-192.png app\src\main\assets\ >nul
 copy /Y ..\icone-512.png app\src\main\assets\ >nul
 copy /Y ..\manifest.webmanifest app\src\main\assets\ >nul
+if not exist app\src\main\assets\js mkdir app\src\main\assets\js
+copy /Y vendor\js\*.js app\src\main\assets\js\ >nul
 call gradlew.bat --no-daemon assembleRelease
 if errorlevel 1 (
   echo.

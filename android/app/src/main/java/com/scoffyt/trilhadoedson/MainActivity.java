@@ -8,6 +8,9 @@ import android.view.View;
 import android.view.WindowManager;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import java.util.HashMap;
+import java.util.Map;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -41,6 +44,25 @@ public class MainActivity extends Activity {
         s.setUserAgentString(s.getUserAgentString() + " TrilhaDoEdsonApp");
 
         web.setWebViewClient(new WebViewClient() {
+            // three.js vem de dentro do APK: abre mais rápido e funciona sem internet
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView v, WebResourceRequest req) {
+                String u = req.getUrl().toString(), f = null;
+                if (u.endsWith("three.min.js")) f = "three.min.js";
+                else if (u.endsWith("GLTFLoader.js")) f = "GLTFLoader.js";
+                else if (u.endsWith("SkeletonUtils.js")) f = "SkeletonUtils.js";
+                if (f == null) return null;
+                try {
+                    WebResourceResponse r = new WebResourceResponse("text/javascript", "utf-8", getAssets().open("js/" + f));
+                    Map<String, String> h = new HashMap<>();
+                    h.put("Access-Control-Allow-Origin", "*");
+                    r.setResponseHeaders(h);
+                    return r;
+                } catch (Exception e) {
+                    return null;
+                }
+            }
+
             @Override
             public void onReceivedError(WebView v, WebResourceRequest req, WebResourceError err) {
                 // sem internet na página principal: usa a cópia embutida
