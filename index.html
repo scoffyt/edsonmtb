@@ -326,7 +326,7 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-user-se
   <div class="aba-topo"><h2 id="t-ajustes">Ajustes</h2><button class="fechar" type="button" aria-label="Fechar ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="ajustes"><button class="opcao" data-op="som"></button><button class="opcao" data-op="musica"></button><button class="opcao" data-op="qualidade"></button><button class="opcao" data-op="narr"></button></div>
   <div class="secao"><h3>Narração</h3><p class="nota">Para usar a sua voz nas frases, toque em Gravar: o celular abre o gravador. Frases curtas, de até 3 segundos.</p><ul class="vozes" id="vozes"></ul></div>
-  <p class="nota">Versão 23</p>
+  <p class="nota">Versão 24</p>
 </section>
 
 
@@ -2175,7 +2175,7 @@ let abaAtual=null;
 function abreAba(id){
   fechaAba(true);const el=$('aba-'+id);if(!el)return;el.hidden=false;el.scrollTop=0;abaAtual=id;
   document.querySelectorAll('.abas [data-aba]').forEach(b=>b.setAttribute('aria-expanded',b.dataset.aba===id?'true':'false'));
-  if(id==='mapas')renderMapas();if(id==='missoes')renderMissoes($('listaMissoes'),false);if(id==='garagem'){renderPilotos();renderBikes();renderCores();}
+  if(id==='ranking')sbCarrega();if(id==='mapas')renderMapas();if(id==='missoes')renderMissoes($('listaMissoes'),false);if(id==='garagem'){renderPilotos();renderBikes();renderCores();}
   const f=el.querySelector('.fechar');if(f)f.focus({preventScroll:true});
 }
 function fechaAba(silencioso){
@@ -2191,7 +2191,7 @@ function toMenu(){
   fechaAba(true);vozFila=[];if(SOM.paraVoz)SOM.paraVoz();
   st='menu';modo='livre';modoDia=false;R_G=Math.random;reset(false);
   menu.hidden=false;fim.hidden=true;pausa.hidden=true;$('story').hidden=true;hud.hidden=true;$('mapaBan').hidden=true;$('contagem').hidden=true;
-  dica.classList.add('some');showRec();renderAtual();renderRank();renderDia();
+  dica.classList.add('some');showRec();renderAtual();renderRank();renderDia();sbCarrega();
 }
 $('btnMenuFim').addEventListener('click',toMenu);
 $('btnSairMenu').addEventListener('click',toMenu);
@@ -2414,7 +2414,7 @@ const melhorDia=()=>{const d=ls.get('trilha-edson-dia',null);return d&&d.dia===d
 function renderDia(){
   const ol=$('listaDia'),nota=$('diaNota');ol.textContent='';
   const [y,mo,d]=diaHoje().split('-');
-  if(rankDB&&rankDia.length){
+  if((rankDB||sbOk)&&rankDia.length){
     rankDia.forEach((r,i)=>{const li=document.createElement('li');if(r.id===rankUID)li.className='eu';
       const a=document.createElement('span');a.textContent=(i+1)+'º';const b=document.createElement('span');b.textContent=(typeof r.nome==='string'&&r.nome)||'Ciclista';
       const c=document.createElement('b');c.textContent=fmtN(+r.pontos||0);li.append(a,b,c);ol.append(li);});
@@ -2425,6 +2425,7 @@ function renderDia(){
   }
 }
 async function enviarDia(p){
+  if(sbOk){if(!cfg.nome)return;if(diaMine&&diaMine.dia===diaHoje()&&(+diaMine.pontos||0)>=p&&sbId(cfg.nome)===rankUID)return;await sbEnviar(p,'diario');return;}
   if(!rankDB||!rankUID||rankRO||!cfg.nome)return;
   const hoje=diaHoje();if(diaMine&&diaMine.dia===hoje&&(+diaMine.pontos||0)>=p)return;
   try{await rankDB.doc('diario/'+rankUID).set({dia:hoje,nome:cfg.nome.trim().slice(0,18),pontos:p,bike:bikeAtual().id,quando:Date.now()});diaMine={dia:hoje,pontos:p};}catch(e){}
@@ -2833,6 +2834,47 @@ function updateHud(dt){
 }
 
 /* ---------- ranking ---------- */
+
+/* ---------- ranking online no Supabase (vale no GitHub Pages e onde a rede deixar) ---------- */
+const SB_URL='https://omjltxvdxmttzhfheggl.supabase.co',
+  SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tamx0eHZkeG10dHpoZmhlZ2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxMDc0OTgsImV4cCI6MjEwOTY4MzQ5OH0.YKCiT45XwzfqQh26vVayzhFyp8kMyOtndWeCpai24p4';
+const sbHead={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
+let sbOk=false,sbPronto=null,sbBusy=false;
+const sbId=n=>'n:'+String(n||'').trim().toLowerCase();
+function sbFetch(path,opt){
+  const ctl=typeof AbortController!=='undefined'?new AbortController():null,t=setTimeout(()=>{if(ctl)ctl.abort();},8000);
+  return fetch(SB_URL+'/rest/v1/'+path,Object.assign({signal:ctl?ctl.signal:undefined},opt||{},{headers:Object.assign({},sbHead,(opt&&opt.headers)||{})}))
+    .then(r=>{clearTimeout(t);if(!r.ok)throw new Error('sb '+r.status);return r.status===201||r.status===204?null:r.json();});
+}
+function sbCarrega(){
+  const p=(async()=>{
+    try{
+      const hoje=diaHoje();
+      const [g,d]=await Promise.all([
+        sbFetch('ranking_geral?select=nome,pontos,piloto&order=pontos.desc&limit=10'),
+        sbFetch('ranking?select=nome,pontos&modo=eq.diario&dia=eq.'+hoje+'&order=pontos.desc&limit=60')]);
+      sbOk=true;rankUID=cfg.nome?sbId(cfg.nome):null;rankRO=false;
+      rankList=(g||[]).map(r=>({id:sbId(r.nome),nome:r.nome,pontos:r.pontos}));
+      const vis=new Set();rankDia=[];
+      for(const r of d||[]){const k=sbId(r.nome);if(vis.has(k))continue;vis.add(k);rankDia.push({id:k,nome:r.nome,pontos:r.pontos});if(rankDia.length>=10)break;}
+      const eu=rankList.find(r=>r.id===rankUID);rankMine=eu?{nome:eu.nome,pontos:eu.pontos}:(rankMine&&sbId(rankMine.nome)===rankUID?rankMine:null);
+      const euD=rankDia.find(r=>r.id===rankUID);diaMine=euD?{dia:hoje,pontos:euD.pontos}:null;
+    }catch(e){if(!sbOk)sbOk=false;}
+    renderRank();renderDia();
+  })();
+  if(!sbPronto)sbPronto=p;return p;
+}
+async function sbEnviar(p,modoR){
+  const nome=(cfg.nome||'').trim().slice(0,18);if(!nome)return 'nome';
+  if(sbBusy)return 'erro';sbBusy=true;
+  try{
+    await sbFetch('ranking',{method:'POST',headers:{'Content-Type':'application/json',Prefer:'return=minimal'},
+      body:JSON.stringify({nome,pontos:Math.max(0,Math.min(500000,Math.round(p))),distancia:Math.min(100000,lastRun?lastRun.distN:Math.floor(dist)),
+        piloto:String(cfg.piloto||'edson').slice(0,12),bike:bikeAtual().id,modo:modoR})});
+    sbCarrega();return 'ok';
+  }catch(e){return 'erro';}
+  finally{sbBusy=false;}
+}
 let rankDB=null,rankUID=null,rankRO=false,rankList=[],rankMine=null,rankBusy=false,dlCap=null;
 const locais=()=>{const l=ls.get('trilha-edson-melhores',[]);return Array.isArray(l)?l:[];};
 function addLocal(p){const l=locais();l.push({p,d:Math.floor(dist),q:Date.now()});l.sort((a,b)=>b.p-a.p);ls.set('trilha-edson-melhores',l.slice(0,5));}
@@ -2841,8 +2883,8 @@ function renderRank(){
   const linha=(pos,nome,val,eu)=>{const li=document.createElement('li');if(eu)li.className='eu';
     const a=document.createElement('span');a.textContent=pos+'º';const b=document.createElement('span');b.textContent=nome;const c=document.createElement('b');c.textContent=val;
     li.append(a,b,c);ol.append(li);};
-  if(rankDB){
-    $('rankTitulo').textContent='Ranking';
+  if(rankDB||sbOk){
+    $('rankTitulo').textContent='Ranking geral';
     rankList.slice(0,10).forEach((r,i)=>linha(i+1,(typeof r.nome==='string'&&r.nome)||'Ciclista',fmtN(+r.pontos||0),r.id===rankUID));
     nota.textContent=rankList.length?(rankRO?'Você pode ver o ranking, mas esta página não deixa você entrar nele.':''):'Ninguém entrou no ranking ainda. Jogue uma partida e seja o primeiro.';
   }else{
@@ -2855,6 +2897,7 @@ async function initCaps(){
   try{
     const c=window.claude;if(!c||typeof c.use!=='function')return;
     c.use('downloads').then(d=>{dlCap=d;}).catch(()=>{});
+    if(sbPronto)await sbPronto;if(sbOk)return;
     const [db,user]=await Promise.all([c.use('db'),c.use('user')]);
     if(!db)return;
     rankDB=db;
@@ -2875,6 +2918,9 @@ async function initCaps(){
   }catch(e){}
 }
 async function enviarRank(p){
+  if(sbOk){const antes=+(rankMine&&rankMine.pontos)||0;if(modo==='diario')return 'ok';if(antes>=p&&rankMine&&sbId(rankMine.nome)===sbId(cfg.nome))return 'menor';
+    const loc=ls.get('trilha-edson-sb',{})||{},k=sbId(cfg.nome);if((+loc[k]||0)>=p)return 'menor';
+    const r=await sbEnviar(p,modo==='noturno'?'noturno':'livre');if(r==='ok'){rankMine={nome:cfg.nome,pontos:Math.max(p,antes)};loc[k]=p;ls.set('trilha-edson-sb',loc);}return r;}
   if(!rankDB||!rankUID||rankRO||rankBusy)return 'off';
   const nome=(cfg.nome||'').trim().slice(0,18);if(!nome)return 'nome';
   const antes=+(rankMine&&rankMine.pontos)||0;
@@ -2890,7 +2936,8 @@ async function enviarRank(p){
 const RANK_MSG={ok:'Seu novo recorde está no ranking.','nome-ok':'Nome atualizado. Seu recorde no ranking continua maior que esta partida.',menor:'Seu recorde no ranking já é maior que esta partida.',erro:'Não deu para salvar no ranking agora.',off:'O ranking não está disponível para você nesta página.',nome:'Escreva um nome para aparecer no ranking.'};
 function prepRankFim(p){
   const box=$('fRank'),nota=$('fRankNota');
-  if(!rankDB||!rankUID||rankRO){box.hidden=true;return;}
+  if(sbOk){rankUID=cfg.nome?sbId(cfg.nome):null;}
+  else if(!rankDB||!rankUID||rankRO){box.hidden=true;return;}
   box.hidden=false;$('nomeRank').value=cfg.nome||'';nota.textContent='';
   if(modo==='diario'&&cfg.nome)enviarDia(p);
   if(cfg.nome&&p>(+(rankMine&&rankMine.pontos)||0)){nota.textContent='Salvando no ranking...';enviarRank(p).then(r=>{nota.textContent=RANK_MSG[r]||'';});}
@@ -2900,7 +2947,8 @@ $('formRank').addEventListener('submit',e=>{
   e.preventDefault();
   const v=$('nomeRank').value.trim().slice(0,18);
   if(!v){$('fRankNota').textContent=RANK_MSG.nome;return;}
-  cfg.nome=v;saveCfg();$('fRankNota').textContent='Salvando no ranking...';
+  if(sbOk&&sbId(v)!==sbId(cfg.nome))rankMine=null;
+  cfg.nome=v;saveCfg();if(sbOk)rankUID=sbId(v);$('fRankNota').textContent='Salvando no ranking...';
   if(modo==='diario')enviarDia(lastScore);
   enviarRank(lastScore).then(r=>{$('fRankNota').textContent=RANK_MSG[r]||'';});
 });
@@ -2960,7 +3008,7 @@ $('btnSalvarStory').addEventListener('click',async()=>{
 
 /* ---------- laço ---------- */
 showRec();reset(false);loadModels();applyQuality();
-renderAjustes();renderCores();renderBikes();renderMapas();carregaPilotos();renderPilotos();renderAtual();renderMissoes($('listaMissoes'),false);renderRank();renderDia();renderVozes();carregaVozes();initCaps();
+renderAjustes();renderCores();renderBikes();renderMapas();carregaPilotos();renderPilotos();renderAtual();renderMissoes($('listaMissoes'),false);renderRank();renderDia();renderVozes();carregaVozes();sbCarrega();initCaps();
 let last=performance.now();
 function loop(now){
   const dt=Math.min(0.033,(now-last)/1000);last=now;
