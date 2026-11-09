@@ -56,6 +56,11 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-user-se
   min-height:52px;padding:0 18px 0 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.35);background:rgba(12,24,20,.5);color:#fff;font:700 15px var(--font-body);
   touch-action:none;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 #btnFreio svg{width:24px;height:24px}
+#btnCam{position:fixed;z-index:2;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;
+  min-height:46px;padding:0 16px 0 12px;border-radius:999px;border:1.5px solid rgba(255,255,255,.35);background:rgba(12,24,20,.5);color:#fff;font:700 14px var(--font-body);
+  touch-action:none;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#btnCam svg{width:22px;height:22px}
+#btnCam:focus-visible{outline:2px solid var(--farol);outline-offset:3px}
 #btnFreio[aria-pressed="true"]{background:var(--farol);color:#1d1406;border-color:var(--farol)}
 #btnFreio:focus-visible{outline:2px solid var(--farol);outline-offset:3px}
 #volante{position:fixed;z-index:2;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:14px}
@@ -430,6 +435,7 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.5;-webkit-user-se
     <span class="chip" id="hModo" hidden></span>
   </div>
 </div>
+<button type="button" id="btnCam" hidden aria-label="Trocar câmera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l1.6-2h6.8L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg><span>Câmera</span></button>
 <button type="button" id="btnFreio" hidden aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9v6M14.5 9v6"/></svg><span>Frear</span></button>
 <div id="volante" hidden><button type="button" id="vEsq" aria-label="Virar para a esquerda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><button type="button" id="vDir" aria-label="Virar para a direita"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
 <div id="dica" class="some" aria-hidden="true">Toque na tela para pular</div>
@@ -2643,6 +2649,10 @@ function renderCam(){
 }
 $('camLado').addEventListener('click',()=>{cfg.cam='lado';saveCfg();renderCam();renderAjustes();});
 $('camFP').addEventListener('click',()=>{cfg.cam='fp';saveCfg();renderCam();renderAjustes();});
+function trocaCamJogo(){gesto();cfg.cam=cfg.cam==='fp'?'lado':'fp';camSet=false;saveCfg();renderCam();renderAjustes();}
+$('btnCam').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();trocaCamJogo();});
+$('btnCam').addEventListener('click',e=>{if(e.detail===0)trocaCamJogo();});
+addEventListener('keydown',e=>{if(e.code==='KeyC'&&!e.repeat&&st==='play')trocaCamJogo();});
 
 /* ---------- lado direito da trilha (primeira pessoa): mesmos objetos, em outra disposição ---------- */
 const ladoDir=[];
@@ -3312,7 +3322,7 @@ function render(dt){
   const fp=fpModo();
   rider.visible=!fp;blob.visible=!fp;beam.visible=!fp;fpRig.visible=fp;
   for(const m of ladoDir)m.visible=fp;atualizaFazendas(dt,fp);
-  {const fv=st==='play';if(fv!==freioVis){freioVis=fv;$('btnFreio').hidden=!fv;if(!fv&&freio)setFreio(false);}}
+  {const fv=st==='play';if(fv!==freioVis){freioVis=fv;$('btnFreio').hidden=!fv;$('btnCam').hidden=!fv;if(!fv&&freio)setFreio(false);}}
   {const v=fp&&(st==='play'||st==='intro');if(v!==volVis){volVis=v;$('volante').hidden=!v;if(!v){steerK.bl=steerK.br=false;}}
    if(v&&st==='play'&&!dicaFP&&t>1.5){dicaFP=true;ls.set('trilha-edson-dica-fp',true);showDica('Use ◀ ▶ para desviar. Arraste no alto da tela para olhar em volta',4);}}
   if(fp)cameraFP(dt,dark);
