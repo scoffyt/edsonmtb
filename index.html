@@ -793,7 +793,9 @@ function terrain(x,z){
     if(bw.litoral>0){const beach=trackH(x)+(SEA-1.2-trackH(x))*sm(-2.5,-15,z)-Math.max(0,-z-15)*0.4;base+=(beach-base)*bw.litoral;}
     if(bw.cidade>0){const flat=trackH(x)+Math.max(0,-z-4)*0.04;base+=(flat-base)*bw.cidade;}
   }
-  if(fazendas.length)base=terrainFaz(x,z,base);
+  let vK=0;
+  if(vilaTerra&&z<-2){const kx=sm(VILA.x0-40,VILA.x0-8,x)*(1-sm(VILA.x1+8,VILA.x1+40,x)),kz=1-sm(-16,-38,z);vK=kx*kz;if(vK>0)base+=(trackH(x)-0.08-base)*vK;}
+  if(fazendas.length&&!(vilaTerra&&x>VILA.x0-60&&x<VILA.x1+60))base=terrainFaz(x,z,base);
   const wy=riverWater(x,z);
   return tK>0?base+(wy-0.9-base)*tK:base;
 }
@@ -3754,6 +3756,7 @@ ofResumoMenu();
 
 /* ---------- vila (mundo aberto, primeiro pedaço) ---------- */
 const VILA={x0:34,x1:340,start:62};
+let vilaTerra=false;
 let vilaExtra=[],energT=0,energPop=false;
 let vilaG=null,vilaPredios=[],vilaDir=0,vilaSp=0,vilaFace=1,vilaPerto=null,lojaTipo=null,vilaSeta=null;
 function texTexto(l1,l2,cor,fundo){
@@ -3783,11 +3786,11 @@ function vPredio(x,cf){
 }
 function vDecor(k,x,zFront,o={}){
   const m=MOD[k];if(!m)return null;
-  const r=m.root.clone(true),rot=o.rot||0,c=Math.abs(Math.cos(rot)),sn=Math.abs(Math.sin(rot));
-  const sx=c*m.size.x+sn*m.size.z,sz=c*m.size.z+sn*m.size.x,zc=zFront-sz/2;
-  let y0=1e9;for(const dx of [-.5,0,.5])for(const dz of [-.5,0,.5])y0=Math.min(y0,terrain(x+dx*sx,zc+dz*sz));
-  const g=new T.Group();g.position.set(x,y0,zc);r.rotation.y=rot;g.add(r);
-  if(o.base)part(boxGeo,M(0x5b5348),0,-1.9,0,sx*0.98,4,sz*0.98,g);
+  const r=m.root.clone(true),rot=o.rot||0,sc=o.s||1,c=Math.abs(Math.cos(rot)),sn=Math.abs(Math.sin(rot));
+  const sx=(c*m.size.x+sn*m.size.z)*sc,sz=(c*m.size.z+sn*m.size.x)*sc,zc=zFront-sz/2;
+  let y0=1e9;for(const dx of [-.5,-.25,0,.25,.5])y0=Math.min(y0,trackH(x+dx*sx));
+  const g=new T.Group();g.position.set(x,y0-0.02+(o.dy||0),zc);r.rotation.y=rot;r.scale.setScalar(sc);g.add(r);
+  if(o.base)part(boxGeo,M(0x5b5348),0,-2.1,0,sx*0.98,4.2,sz*0.98,g);
   scene.add(g);vilaExtra.push(g);return g;
 }
 function buildVila(){
@@ -3803,27 +3806,28 @@ function buildVila(){
   vPredio(226,{nome:'Lanchonete do Zé',tipo:'lanchonete',t1:'LANCHONETE DO ZÉ',t2:'Energético · pastel · caldo de cana',parede:0xe8c36a,telhado:0x9b2f22,toldo:0x2f9e44,cor:'#fff3c4',fundo:'#3a1d12',janelas:[-4.6,4.6],
     extra:(P,g)=>{for(const sx of [-7.6,7.6]){P(boxGeo,M(0xf4efe4),sx,0.55,-1.3,0.9,1.0,0.9);P(boxGeo,M(0xd8452e),sx,1.2,-1.3,1.0,0.14,1.0);}}});
   vPredio(306,{nome:'Mercadinho',tipo:null,t1:'MERCADINHO',t2:'Fechado · em breve',parede:0xa9c4a0,telhado:0x4a5d3a,toldo:0x7a7a7a,cor:'#e6e6e6',fundo:'#1f2a1f',janelas:[-4.6,4.6]});
-  vDecor('vOnibus',64,-1.8);
-  vDecor('vSedan',122,-6.2,{rot:0.3});
-  vDecor('vModerna',140,-3.8,{base:true});
-  vDecor('vTijolo',198,-3.8,{base:true});
-  vDecor('vKombi',252,-6.2,{rot:-0.22});
-  vDecor('vSweet',282,-3.4,{base:true});
-  vDecor('vSedan',330,-7.4,{rot:-0.5});
+  vDecor('vOnibus',64,-1.8,{s:1.7});
+  vDecor('vSedan',122,-5.2,{rot:0.3,s:1.15});
+  vDecor('vModerna',140,-3.4,{base:true,s:1.2});
+  vDecor('vTijolo',198,-3.4,{base:true,s:1.2});
+  vDecor('vKombi',252,-5.2,{rot:-0.22,s:1.2});
+  vDecor('vSweet',282,-3.2,{base:true,s:1.1});
+  vDecor('vSedan',330,-6.0,{rot:-0.5,s:1.15});
 }
 function vilaDestroi(){for(const p of vilaPredios)scene.remove(p.g);for(const g of vilaExtra)scene.remove(g);vilaPredios=[];vilaExtra=[];}
 function trans(fn){const f=$('fadeV');f.classList.add('on');setTimeout(()=>{fn();f.classList.remove('on');},320);}
 function entraVila(){
   gesto();fechaAba(true);aplicarBike();vozFila=[];if(SOM.paraVoz)SOM.paraVoz();
   trans(()=>{
-    st='vila';reset(false);setClima('limpo',true);climaT=1e9;startHour=16;hour=16;
+    st='vila';vilaTerra=true;reset(false);setClima('limpo',true);climaT=1e9;startHour=16;hour=16;
+    for(const rv of rivers)removeRiver(rv);rivers=[];nextRiver=1e9;rebuildGround(0);
     rx=VILA.start;R.y=trackH(rx);R.ground=true;R.ang=Math.atan(trackS(rx));initPools(VILA.x0);
     vilaDir=0;vilaSp=0;vilaFace=1;vilaDestroi();buildVila();
     menu.hidden=true;fim.hidden=true;pausa.hidden=true;hud.hidden=true;$('vilaHud').hidden=false;$('btnEntrar').hidden=true;
     vilaCarteira();camSet=false;
   });
 }
-function vilaSai(){if(!vilaPredios.length&&$('vilaHud').hidden)return;vilaDestroi();$('vilaHud').hidden=true;$('lojaUI').hidden=true;vilaDir=0;vilaSp=0;vilaFace=1;vilaPerto=null;document.body.classList.remove('lojaAberta');}
+function vilaSai(){vilaTerra=false;if(!vilaPredios.length&&$('vilaHud').hidden)return;vilaDestroi();$('vilaHud').hidden=true;$('lojaUI').hidden=true;vilaDir=0;vilaSp=0;vilaFace=1;vilaPerto=null;document.body.classList.remove('lojaAberta');}
 function vilaCarteira(){$('vMoedas').textContent=oficina.moedas;$('vFichas').textContent=oficina.fichas;}
 function vilaUpdate(dt){
   const ui=!$('lojaUI').hidden;
@@ -3833,7 +3837,7 @@ function vilaUpdate(dt){
   if(Math.abs(vilaSp)>0.4)vilaFace=vilaSp>0?1:-1;
   R.y=trackH(rx);R.ground=true;R.ang=Math.atan(trackS(rx));R.phase+=dt*Math.abs(vilaSp)*0.55;R.z=0;R.vz=0;
   if(Math.abs(vilaSp)>1&&Math.random()<dt*14)emit(dust,rx-0.9*vilaFace,R.y+0.1,0.7,rnd(-2,0),rnd(.5,1.4),rnd(-.5,.5),0.5);
-  planRivers();planChurches();
+  planChurches();
   vilaPerto=null;for(const p of vilaPredios){const perto=!!p.tipo&&Math.abs(rx-p.x)<3;p.seta.visible=perto;p.seta.position.y=5.6+Math.sin(gt*5)*0.25;p.seta.rotation.y=gt*2;if(perto)vilaPerto=p;}
   const be=$('btnEntrar');be.hidden=!vilaPerto||ui;$('vDica').hidden=!be.hidden;if(vilaPerto&&!ui)be.textContent='Entrar · '+vilaPerto.nome;
 }
